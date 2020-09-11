@@ -2,6 +2,7 @@ import React, { Fragment, useState, useEffect } from "react";
 import Header from "./component/header";
 import Formulario from "./component/formulario";
 import Clima from "./component/clima";
+import Error from "./component/error";
 
 function App() {
 
@@ -11,6 +12,7 @@ function App() {
 	})
 	const [consultar,guardarConsultar]= useState(false)
 	const [resultado,guardarResultado]= useState({})
+	const [error,guardarError] = useState(false)
 
 	const {ciudad,pais} = busqueda
 
@@ -18,18 +20,30 @@ function App() {
 		const consultarApi = async () =>{
 			if(consultar){
 				const appId = '65a133ed800f57cc8ee90ed014e44194'
-			const url = `http://api.openweathermap.org/data/2.5/weather?q=${ciudad},${pais}&appid=${appId}`
+			const url = `https://api.openweathermap.org/data/2.5/weather?q=${ciudad},${pais}&appid=${appId}`
 
-			const respuesta = await fetch(url)
+			const respuesta = await fetch(url,{method:'post'})
 			const resultado = await respuesta.json()
 			
 			guardarResultado(resultado)
 			guardarConsultar(false)
+
+				if(resultado.cod === '404'){
+					guardarError(true)
+				}else{
+					guardarError(false)
+				}
 			}
-			
 		}
 		consultarApi()
 	},[consultar,ciudad,pais])
+
+	let component
+	if(error){
+		component = <Error mensaje='No hay resultado'/>
+	}else{
+		component = <Clima resultado={resultado}/>
+	}
 
   return (
     <Fragment>
@@ -46,9 +60,7 @@ function App() {
 				/>
 			</div>
             <div className="col m6 s12">
-				<Clima
-					resultado={resultado}
-				/>
+				{component}
 			</div>
           </div>
         </div>
